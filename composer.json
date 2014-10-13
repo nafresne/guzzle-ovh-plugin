@@ -1,0 +1,28 @@
+{
+    "name": "nafresne/guzzle-ovh-plugin",
+    "description": "Guzzle plugin to manage OVH authentication",
+    "keywords": ["guzzle", "plugin", "ovh", "api", "rest", "authentication"],
+    "homepage": "https://github.com/nafresne/guzzle-ovh-plugin",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Nicolas Afresne",
+            "email": "nicolas.afresne@gmail.com",
+            "homepage": "https://github.com/nafresne"
+        }
+    ],
+
+    "autoload": {
+        "psr-4": { "Nafresne\\GuzzleHttp\\": "src/" }
+    },
+
+    "require": {
+        "php": ">=5.4"
+    },
+
+    "require-dev": {
+        "guzzlehttp/guzzle": "4.*",
+        "phpunit/phpunit": "3.7.*"
+    }
+}
