@@ -2,13 +2,11 @@
 
 namespace  Nafresne\GuzzleHttp\Subscriber;
 
-use GuzzleHttp\Message\RequestInterface;
-use GuzzleHttp\Event\EmitterInterface;
 use GuzzleHttp\Event\SubscriberInterface;
 use GuzzleHttp\Event\BeforeEvent;
 use GuzzleHttp\Event\RequestEvents;
-Use GuzzleHttp\Client;
 use GuzzleHttp\Collection;
+use GuzzleHttp\Message\Request;
 
 /**
  * OVH signing plugin
@@ -18,8 +16,20 @@ class OvhSubscriber implements SubscriberInterface
     /** @var Collection Configuration settings */
     protected $config;
 
+    /** @var int Time Drift */
+    protected $timeDrift = 0;
+
+    /** @var string OVH application key */
+    protected $applicationKey;
+
+    /** @var string OVH application secret */
+    protected $applicationSecret;
+
+    /** @var string OVH consumer key */
+    protected $consumerKey;
+
     /**
-     * Create a new OAuth 1.0 plugin
+     * Create a OVH subscriber
      *
      * @param array $config Configuration array containing these parameters:
      *     - string version
@@ -34,6 +44,77 @@ class OvhSubscriber implements SubscriberInterface
             'application_key', 'application_secret', 'consumer_key'
         ));
 
-        ladybug::dump($this->config);
+        $this->applicationKey    = $this->config['application_key'];
+        $this->applicationSecret = $this->config['application_secret'];
+        $this->consumerKey       = $this->config['consumer_key'];
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getEvents()
+    {
+        return array(
+            'before' => array('onBefore', RequestEvents::SIGN_REQUEST)
+        );
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function onBefore(BeforeEvent $event, $name)
+    {
+        $time = time() - $this->timeDrift;
+        $request = $event->getRequest();
+
+        $signature = $this->getSignature($request, $time);
+
+        $this->createOvhHeader($request, $signature, $time);
+    }
+
+    /**
+     * Create the OVH header
+     * @param Request $request
+     * @param string  $signature
+     * @param int     $time
+     */
+    protected function createOvhHeader(Request $request, $signature, $time)
+    {
+        $request->setHeader('Content-Type', 'application/json');
+        $request->setHeader('X-Ovh-Application', $this->applicationKey);
+        $request->setHeader('X-Ovh-Consumer', $this->consumerKey);
+        $request->setHeader('X-Ovh-Signature', $signature);
+        $request->setHeader('X-Ovh-Timestamp', $time);
+    }
+
+    /**
+     * Create the OVH signature
+     * @param Request $request
+     * @param int     $time
+     *
+     * @return string
+     */
+    protected function getSignature(Request $request, $time)
+    {
+        $method = $request->getMethod();
+        $url    = $request->getUrl();
+        $body   = $request->getBody();
+
+        if ($body) {
+            $body = json_encode($body);
+        }
+
+        $schema = $this->applicationSecret.'+'.$this->consumerKey.'+'.$method.'+'.$url.'+'.$body.'+'. $time;
+
+        return '$1$' . sha1($schema);
+    }
+
+    /**
+     * Set timeDrift
+     * @param int $timeDrift
+     */
+    public function setTimeDrift($timeDrift)
+    {
+        $this->timeDrift = (int) $timeDrift;
     }
 }
