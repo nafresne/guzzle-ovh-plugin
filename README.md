@@ -1,5 +1,6 @@
 #Guzzle OVH Plugin
 
+[![PHP version](https://badge.fury.io/ph/nafresne%2Fguzzle-ovh-plugin.svg)](http://badge.fury.io/ph/nafresne%2Fguzzle-ovh-plugin)
 [![Build Status](https://scrutinizer-ci.com/g/nafresne/guzzle-ovh-plugin/badges/build.png?b=master)](https://scrutinizer-ci.com/g/nafresne/guzzle-ovh-plugin/build-status/master)
 [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/nafresne/guzzle-ovh-plugin/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/nafresne/guzzle-ovh-plugin/?branch=master)
 [![Code Coverage](https://scrutinizer-ci.com/g/nafresne/guzzle-ovh-plugin/badges/coverage.png?b=master)](https://scrutinizer-ci.com/g/nafresne/guzzle-ovh-plugin/?branch=master)
