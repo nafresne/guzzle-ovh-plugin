@@ -13,6 +13,10 @@ class OvhClient extends Client
     /** @var string Ovh auth time Url used by the client */
     protected $timeDriftUrl;
 
+    protected $timeDrift = 0;
+
+    protected $authenticated = false;
+
     /**
      * {@inheritdoc}
      * @throw \InvalidArgumentException if time_url missing
@@ -45,8 +49,17 @@ class OvhClient extends Client
     {
         $response = $this->get($this->getBaseUrl() . $this->timeDriftUrl);
 
-        if ($this->getEmitter() instanceof OvhSubscriber) {
-            $this->getEmitter()->setTimeDrift(time() - (int) $response->getBody()->__toString());
-        }
+        $this->authenticated = true;
+        $this->timeDrift = (int) $response->getBody()->__toString() - \time();
+    }
+
+    public function isAuthenticated()
+    {
+        return $this->authenticated;
+    }
+
+    public function getTimeDrift()
+    {
+        return $this->timeDrift;
     }
 }

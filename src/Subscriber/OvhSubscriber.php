@@ -16,9 +16,6 @@ class OvhSubscriber implements SubscriberInterface
     /** @var Collection Configuration settings */
     protected $config;
 
-    /** @var int Time Drift */
-    protected $timeDrift = 0;
-
     /** @var string OVH application key */
     protected $applicationKey;
 
@@ -64,10 +61,16 @@ class OvhSubscriber implements SubscriberInterface
      */
     public function onBefore(BeforeEvent $event, $name)
     {
-        $time = time() - $this->timeDrift;
+        $client = $event->getClient();
         $request = $event->getRequest();
 
-        $signature = $this->getSignature($request, $time);
+        $time = time() + $client->getTimeDrift();
+        $authenticated = $client->isAuthenticated();
+        $signature = null;
+
+        if ($authenticated) {
+            $signature = $this->getSignature($request, $time);
+        }
 
         $this->createOvhHeader($request, $signature, $time);
     }
@@ -82,9 +85,12 @@ class OvhSubscriber implements SubscriberInterface
     {
         $request->setHeader('Content-Type', 'application/json');
         $request->setHeader('X-Ovh-Application', $this->applicationKey);
-        $request->setHeader('X-Ovh-Consumer', $this->consumerKey);
-        $request->setHeader('X-Ovh-Signature', $signature);
-        $request->setHeader('X-Ovh-Timestamp', $time);
+
+        if ($signature) {
+            $request->setHeader('X-Ovh-Consumer', $this->consumerKey);
+            $request->setHeader('X-Ovh-Signature', $signature);
+            $request->setHeader('X-Ovh-Timestamp', $time);
+        }
     }
 
     /**
@@ -100,10 +106,6 @@ class OvhSubscriber implements SubscriberInterface
         $url    = $request->getUrl();
         $body   = $request->getBody();
 
-        if ($body) {
-            $body = json_encode($body);
-        }
-
         $schema = $this->applicationSecret.'+'.$this->consumerKey.'+'.$method.'+'.$url.'+'.$body.'+'. $time;
 
         return '$1$' . sha1($schema);
@@ -116,5 +118,10 @@ class OvhSubscriber implements SubscriberInterface
     public function setTimeDrift($timeDrift)
     {
         $this->timeDrift = (int) $timeDrift;
+    }
+
+    public function setAuthenticated($authenticated)
+    {
+        $this->authenticated = $authenticated;
     }
 }
